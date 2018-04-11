@@ -31,8 +31,6 @@
     }
 
     var defaultOptions = {
-      swfContainerId: 'fingerprintjs2',
-      swfPath: 'flash/compiled/FontList.swf',
       detectScreenOrientation: true,
       sortPluginsFor: [/palemoon/i],
       userDefinedFonts: [],
@@ -84,9 +82,6 @@
       keys = this.doNotTrackKey(keys)
       keys = this.pluginsKey(keys)
       keys = this.canvasKey(keys)
-      keys = this.webglKey(keys)
-      keys = this.webglVendorAndRendererKey(keys)
-      keys = this.adBlockKey(keys)
       keys = this.hasLiedLanguagesKey(keys)
       keys = this.hasLiedResolutionKey(keys)
       keys = this.hasLiedOsKey(keys)
@@ -250,24 +245,6 @@
       }
       return keys
     },
-    webglKey: function (keys) {
-      if (!this.options.excludeWebGL && this.isWebGlSupported()) {
-        keys.addPreprocessedComponent({key: 'webgl', value: this.getWebglFp()})
-      }
-      return keys
-    },
-    webglVendorAndRendererKey: function (keys) {
-      if (!this.options.excludeWebGLVendorAndRenderer && this.isWebGlSupported()) {
-        keys.addPreprocessedComponent({key: 'webgl_vendor', value: this.getWebglVendorAndRenderer()})
-      }
-      return keys
-    },
-    adBlockKey: function (keys) {
-      if (!this.options.excludeAdBlock) {
-        keys.addPreprocessedComponent({key: 'adblock', value: this.getAdBlock()})
-      }
-      return keys
-    },
     hasLiedLanguagesKey: function (keys) {
       if (!this.options.excludeHasLiedLanguages) {
         keys.addPreprocessedComponent({key: 'has_lied_languages', value: this.getHasLiedLanguages()})
@@ -293,30 +270,7 @@
       return keys
     },
     fontsKey: function (keys, done) {
-      if (this.options.excludeJsFonts) {
-        return this.flashFontsKey(keys, done)
-      }
       return this.jsFontsKey(keys, done)
-    },
-    // flash fonts (will increase fingerprinting time 20X to ~ 130-150ms)
-    flashFontsKey: function (keys, done) {
-      if (this.options.excludeFlashFonts) {
-        return done(keys)
-      }
-      // we do flash if swfobject is loaded
-      if (!this.hasSwfObjectLoaded()) {
-        return done(keys)
-      }
-      if (!this.hasMinFlashInstalled()) {
-        return done(keys)
-      }
-      if (typeof this.options.swfPath === 'undefined') {
-        return done(keys)
-      }
-      this.loadSwfAndDetectFonts(function (fonts) {
-        keys.addPreprocessedComponent({key: 'swf_fonts', value: fonts.join(';')})
-        done(keys)
-      })
     },
     // kudos to http://www.lalit.org/lab/javascript-css-font-detect/
     jsFontsKey: function (keys, done) {
@@ -341,42 +295,6 @@
           'Tahoma', 'Times', 'Times New Roman', 'Times New Roman PS', 'Trebuchet MS',
           'Verdana', 'Wingdings', 'Wingdings 2', 'Wingdings 3'
         ]
-        var extendedFontList = [
-          'Abadi MT Condensed Light', 'Academy Engraved LET', 'ADOBE CASLON PRO', 'Adobe Garamond', 'ADOBE GARAMOND PRO', 'Agency FB', 'Aharoni', 'Albertus Extra Bold', 'Albertus Medium', 'Algerian', 'Amazone BT', 'American Typewriter',
-          'American Typewriter Condensed', 'AmerType Md BT', 'Andalus', 'Angsana New', 'AngsanaUPC', 'Antique Olive', 'Aparajita', 'Apple Chancery', 'Apple Color Emoji', 'Apple SD Gothic Neo', 'Arabic Typesetting', 'ARCHER',
-          'ARNO PRO', 'Arrus BT', 'Aurora Cn BT', 'AvantGarde Bk BT', 'AvantGarde Md BT', 'AVENIR', 'Ayuthaya', 'Bandy', 'Bangla Sangam MN', 'Bank Gothic', 'BankGothic Md BT', 'Baskerville',
-          'Baskerville Old Face', 'Batang', 'BatangChe', 'Bauer Bodoni', 'Bauhaus 93', 'Bazooka', 'Bell MT', 'Bembo', 'Benguiat Bk BT', 'Berlin Sans FB', 'Berlin Sans FB Demi', 'Bernard MT Condensed', 'BernhardFashion BT', 'BernhardMod BT', 'Big Caslon', 'BinnerD',
-          'Blackadder ITC', 'BlairMdITC TT', 'Bodoni 72', 'Bodoni 72 Oldstyle', 'Bodoni 72 Smallcaps', 'Bodoni MT', 'Bodoni MT Black', 'Bodoni MT Condensed', 'Bodoni MT Poster Compressed',
-          'Bookshelf Symbol 7', 'Boulder', 'Bradley Hand', 'Bradley Hand ITC', 'Bremen Bd BT', 'Britannic Bold', 'Broadway', 'Browallia New', 'BrowalliaUPC', 'Brush Script MT', 'Californian FB', 'Calisto MT', 'Calligrapher', 'Candara',
-          'CaslonOpnface BT', 'Castellar', 'Centaur', 'Cezanne', 'CG Omega', 'CG Times', 'Chalkboard', 'Chalkboard SE', 'Chalkduster', 'Charlesworth', 'Charter Bd BT', 'Charter BT', 'Chaucer',
-          'ChelthmITC Bk BT', 'Chiller', 'Clarendon', 'Clarendon Condensed', 'CloisterBlack BT', 'Cochin', 'Colonna MT', 'Constantia', 'Cooper Black', 'Copperplate', 'Copperplate Gothic', 'Copperplate Gothic Bold',
-          'Copperplate Gothic Light', 'CopperplGoth Bd BT', 'Corbel', 'Cordia New', 'CordiaUPC', 'Cornerstone', 'Coronet', 'Cuckoo', 'Curlz MT', 'DaunPenh', 'Dauphin', 'David', 'DB LCD Temp', 'DELICIOUS', 'Denmark',
-          'DFKai-SB', 'Didot', 'DilleniaUPC', 'DIN', 'DokChampa', 'Dotum', 'DotumChe', 'Ebrima', 'Edwardian Script ITC', 'Elephant', 'English 111 Vivace BT', 'Engravers MT', 'EngraversGothic BT', 'Eras Bold ITC', 'Eras Demi ITC', 'Eras Light ITC', 'Eras Medium ITC',
-          'EucrosiaUPC', 'Euphemia', 'Euphemia UCAS', 'EUROSTILE', 'Exotc350 Bd BT', 'FangSong', 'Felix Titling', 'Fixedsys', 'FONTIN', 'Footlight MT Light', 'Forte',
-          'FrankRuehl', 'Fransiscan', 'Freefrm721 Blk BT', 'FreesiaUPC', 'Freestyle Script', 'French Script MT', 'FrnkGothITC Bk BT', 'Fruitger', 'FRUTIGER',
-          'Futura', 'Futura Bk BT', 'Futura Lt BT', 'Futura Md BT', 'Futura ZBlk BT', 'FuturaBlack BT', 'Gabriola', 'Galliard BT', 'Gautami', 'Geeza Pro', 'Geometr231 BT', 'Geometr231 Hv BT', 'Geometr231 Lt BT', 'GeoSlab 703 Lt BT',
-          'GeoSlab 703 XBd BT', 'Gigi', 'Gill Sans', 'Gill Sans MT', 'Gill Sans MT Condensed', 'Gill Sans MT Ext Condensed Bold', 'Gill Sans Ultra Bold', 'Gill Sans Ultra Bold Condensed', 'Gisha', 'Gloucester MT Extra Condensed', 'GOTHAM', 'GOTHAM BOLD',
-          'Goudy Old Style', 'Goudy Stout', 'GoudyHandtooled BT', 'GoudyOLSt BT', 'Gujarati Sangam MN', 'Gulim', 'GulimChe', 'Gungsuh', 'GungsuhChe', 'Gurmukhi MN', 'Haettenschweiler', 'Harlow Solid Italic', 'Harrington', 'Heather', 'Heiti SC', 'Heiti TC', 'HELV',
-          'Herald', 'High Tower Text', 'Hiragino Kaku Gothic ProN', 'Hiragino Mincho ProN', 'Hoefler Text', 'Humanst 521 Cn BT', 'Humanst521 BT', 'Humanst521 Lt BT', 'Imprint MT Shadow', 'Incised901 Bd BT', 'Incised901 BT',
-          'Incised901 Lt BT', 'INCONSOLATA', 'Informal Roman', 'Informal011 BT', 'INTERSTATE', 'IrisUPC', 'Iskoola Pota', 'JasmineUPC', 'Jazz LET', 'Jenson', 'Jester', 'Jokerman', 'Juice ITC', 'Kabel Bk BT', 'Kabel Ult BT', 'Kailasa', 'KaiTi', 'Kalinga', 'Kannada Sangam MN',
-          'Kartika', 'Kaufmann Bd BT', 'Kaufmann BT', 'Khmer UI', 'KodchiangUPC', 'Kokila', 'Korinna BT', 'Kristen ITC', 'Krungthep', 'Kunstler Script', 'Lao UI', 'Latha', 'Leelawadee', 'Letter Gothic', 'Levenim MT', 'LilyUPC', 'Lithograph', 'Lithograph Light', 'Long Island',
-          'Lydian BT', 'Magneto', 'Maiandra GD', 'Malayalam Sangam MN', 'Malgun Gothic',
-          'Mangal', 'Marigold', 'Marion', 'Marker Felt', 'Market', 'Marlett', 'Matisse ITC', 'Matura MT Script Capitals', 'Meiryo', 'Meiryo UI', 'Microsoft Himalaya', 'Microsoft JhengHei', 'Microsoft New Tai Lue', 'Microsoft PhagsPa', 'Microsoft Tai Le',
-          'Microsoft Uighur', 'Microsoft YaHei', 'Microsoft Yi Baiti', 'MingLiU', 'MingLiU_HKSCS', 'MingLiU_HKSCS-ExtB', 'MingLiU-ExtB', 'Minion', 'Minion Pro', 'Miriam', 'Miriam Fixed', 'Mistral', 'Modern', 'Modern No. 20', 'Mona Lisa Solid ITC TT', 'Mongolian Baiti',
-          'MONO', 'MoolBoran', 'Mrs Eaves', 'MS LineDraw', 'MS Mincho', 'MS PMincho', 'MS Reference Specialty', 'MS UI Gothic', 'MT Extra', 'MUSEO', 'MV Boli',
-          'Nadeem', 'Narkisim', 'NEVIS', 'News Gothic', 'News GothicMT', 'NewsGoth BT', 'Niagara Engraved', 'Niagara Solid', 'Noteworthy', 'NSimSun', 'Nyala', 'OCR A Extended', 'Old Century', 'Old English Text MT', 'Onyx', 'Onyx BT', 'OPTIMA', 'Oriya Sangam MN',
-          'OSAKA', 'OzHandicraft BT', 'Palace Script MT', 'Papyrus', 'Parchment', 'Party LET', 'Pegasus', 'Perpetua', 'Perpetua Titling MT', 'PetitaBold', 'Pickwick', 'Plantagenet Cherokee', 'Playbill', 'PMingLiU', 'PMingLiU-ExtB',
-          'Poor Richard', 'Poster', 'PosterBodoni BT', 'PRINCETOWN LET', 'Pristina', 'PTBarnum BT', 'Pythagoras', 'Raavi', 'Rage Italic', 'Ravie', 'Ribbon131 Bd BT', 'Rockwell', 'Rockwell Condensed', 'Rockwell Extra Bold', 'Rod', 'Roman', 'Sakkal Majalla',
-          'Santa Fe LET', 'Savoye LET', 'Sceptre', 'Script', 'Script MT Bold', 'SCRIPTINA', 'Serifa', 'Serifa BT', 'Serifa Th BT', 'ShelleyVolante BT', 'Sherwood',
-          'Shonar Bangla', 'Showcard Gothic', 'Shruti', 'Signboard', 'SILKSCREEN', 'SimHei', 'Simplified Arabic', 'Simplified Arabic Fixed', 'SimSun', 'SimSun-ExtB', 'Sinhala Sangam MN', 'Sketch Rockwell', 'Skia', 'Small Fonts', 'Snap ITC', 'Snell Roundhand', 'Socket',
-          'Souvenir Lt BT', 'Staccato222 BT', 'Steamer', 'Stencil', 'Storybook', 'Styllo', 'Subway', 'Swis721 BlkEx BT', 'Swiss911 XCm BT', 'Sylfaen', 'Synchro LET', 'System', 'Tamil Sangam MN', 'Technical', 'Teletype', 'Telugu Sangam MN', 'Tempus Sans ITC',
-          'Terminal', 'Thonburi', 'Traditional Arabic', 'Trajan', 'TRAJAN PRO', 'Tristan', 'Tubular', 'Tunga', 'Tw Cen MT', 'Tw Cen MT Condensed', 'Tw Cen MT Condensed Extra Bold',
-          'TypoUpright BT', 'Unicorn', 'Univers', 'Univers CE 55 Medium', 'Univers Condensed', 'Utsaah', 'Vagabond', 'Vani', 'Vijaya', 'Viner Hand ITC', 'VisualUI', 'Vivaldi', 'Vladimir Script', 'Vrinda', 'Westminster', 'WHITNEY', 'Wide Latin',
-          'ZapfEllipt BT', 'ZapfHumnst BT', 'ZapfHumnst Dm BT', 'Zapfino', 'Zurich BlkEx BT', 'Zurich Ex BT', 'ZWAdobeF']
-
-        if (that.options.extendedJsFonts) {
-          fontList = fontList.concat(extendedFontList)
-        }
 
         fontList = fontList.concat(that.options.userDefinedFonts)
 
@@ -752,168 +670,6 @@
       if (canvas.toDataURL) { result.push('canvas fp:' + canvas.toDataURL()) }
       return result.join('~')
     },
-
-    getWebglFp: function () {
-      var gl
-      var fa2s = function (fa) {
-        gl.clearColor(0.0, 0.0, 0.0, 1.0)
-        gl.enable(gl.DEPTH_TEST)
-        gl.depthFunc(gl.LEQUAL)
-        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-        return '[' + fa[0] + ', ' + fa[1] + ']'
-      }
-      var maxAnisotropy = function (gl) {
-        var ext = gl.getExtension('EXT_texture_filter_anisotropic') || gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic') || gl.getExtension('MOZ_EXT_texture_filter_anisotropic')
-        if (ext) {
-          var anisotropy = gl.getParameter(ext.MAX_TEXTURE_MAX_ANISOTROPY_EXT)
-          if (anisotropy === 0) {
-            anisotropy = 2
-          }
-          return anisotropy
-        } else {
-          return null
-        }
-      }
-      gl = this.getWebglCanvas()
-      if (!gl) { return null }
-      // WebGL fingerprinting is a combination of techniques, found in MaxMind antifraud script & Augur fingerprinting.
-      // First it draws a gradient object with shaders and convers the image to the Base64 string.
-      // Then it enumerates all WebGL extensions & capabilities and appends them to the Base64 string, resulting in a huge WebGL string, potentially very unique on each device
-      // Since iOS supports webgl starting from version 8.1 and 8.1 runs on several graphics chips, the results may be different across ios devices, but we need to verify it.
-      var result = []
-      var vShaderTemplate = 'attribute vec2 attrVertex;varying vec2 varyinTexCoordinate;uniform vec2 uniformOffset;void main(){varyinTexCoordinate=attrVertex+uniformOffset;gl_Position=vec4(attrVertex,0,1);}'
-      var fShaderTemplate = 'precision mediump float;varying vec2 varyinTexCoordinate;void main() {gl_FragColor=vec4(varyinTexCoordinate,0,1);}'
-      var vertexPosBuffer = gl.createBuffer()
-      gl.bindBuffer(gl.ARRAY_BUFFER, vertexPosBuffer)
-      var vertices = new Float32Array([-0.2, -0.9, 0, 0.4, -0.26, 0, 0, 0.732134444, 0])
-      gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW)
-      vertexPosBuffer.itemSize = 3
-      vertexPosBuffer.numItems = 3
-      var program = gl.createProgram()
-      var vshader = gl.createShader(gl.VERTEX_SHADER)
-      gl.shaderSource(vshader, vShaderTemplate)
-      gl.compileShader(vshader)
-      var fshader = gl.createShader(gl.FRAGMENT_SHADER)
-      gl.shaderSource(fshader, fShaderTemplate)
-      gl.compileShader(fshader)
-      gl.attachShader(program, vshader)
-      gl.attachShader(program, fshader)
-      gl.linkProgram(program)
-      gl.useProgram(program)
-      program.vertexPosAttrib = gl.getAttribLocation(program, 'attrVertex')
-      program.offsetUniform = gl.getUniformLocation(program, 'uniformOffset')
-      gl.enableVertexAttribArray(program.vertexPosArray)
-      gl.vertexAttribPointer(program.vertexPosAttrib, vertexPosBuffer.itemSize, gl.FLOAT, !1, 0, 0)
-      gl.uniform2f(program.offsetUniform, 1, 1)
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, vertexPosBuffer.numItems)
-      try {
-        result.push(gl.canvas.toDataURL())
-      } catch (e) {
-        /* .toDataURL may be absent or broken (blocked by extension) */
-      }
-      result.push('extensions:' + (gl.getSupportedExtensions() || []).join(';'))
-      result.push('webgl aliased line width range:' + fa2s(gl.getParameter(gl.ALIASED_LINE_WIDTH_RANGE)))
-      result.push('webgl aliased point size range:' + fa2s(gl.getParameter(gl.ALIASED_POINT_SIZE_RANGE)))
-      result.push('webgl alpha bits:' + gl.getParameter(gl.ALPHA_BITS))
-      result.push('webgl antialiasing:' + (gl.getContextAttributes().antialias ? 'yes' : 'no'))
-      result.push('webgl blue bits:' + gl.getParameter(gl.BLUE_BITS))
-      result.push('webgl depth bits:' + gl.getParameter(gl.DEPTH_BITS))
-      result.push('webgl green bits:' + gl.getParameter(gl.GREEN_BITS))
-      result.push('webgl max anisotropy:' + maxAnisotropy(gl))
-      result.push('webgl max combined texture image units:' + gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS))
-      result.push('webgl max cube map texture size:' + gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE))
-      result.push('webgl max fragment uniform vectors:' + gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS))
-      result.push('webgl max render buffer size:' + gl.getParameter(gl.MAX_RENDERBUFFER_SIZE))
-      result.push('webgl max texture image units:' + gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS))
-      result.push('webgl max texture size:' + gl.getParameter(gl.MAX_TEXTURE_SIZE))
-      result.push('webgl max varying vectors:' + gl.getParameter(gl.MAX_VARYING_VECTORS))
-      result.push('webgl max vertex attribs:' + gl.getParameter(gl.MAX_VERTEX_ATTRIBS))
-      result.push('webgl max vertex texture image units:' + gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS))
-      result.push('webgl max vertex uniform vectors:' + gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS))
-      result.push('webgl max viewport dims:' + fa2s(gl.getParameter(gl.MAX_VIEWPORT_DIMS)))
-      result.push('webgl red bits:' + gl.getParameter(gl.RED_BITS))
-      result.push('webgl renderer:' + gl.getParameter(gl.RENDERER))
-      result.push('webgl shading language version:' + gl.getParameter(gl.SHADING_LANGUAGE_VERSION))
-      result.push('webgl stencil bits:' + gl.getParameter(gl.STENCIL_BITS))
-      result.push('webgl vendor:' + gl.getParameter(gl.VENDOR))
-      result.push('webgl version:' + gl.getParameter(gl.VERSION))
-
-      try {
-        // Add the unmasked vendor and unmasked renderer if the debug_renderer_info extension is available
-        var extensionDebugRendererInfo = gl.getExtension('WEBGL_debug_renderer_info')
-        if (extensionDebugRendererInfo) {
-          result.push('webgl unmasked vendor:' + gl.getParameter(extensionDebugRendererInfo.UNMASKED_VENDOR_WEBGL))
-          result.push('webgl unmasked renderer:' + gl.getParameter(extensionDebugRendererInfo.UNMASKED_RENDERER_WEBGL))
-        }
-      } catch (e) { /* squelch */ }
-
-      if (!gl.getShaderPrecisionFormat) {
-        return result.join('~')
-      }
-
-      result.push('webgl vertex shader high float precision:' + gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT).precision)
-      result.push('webgl vertex shader high float precision rangeMin:' + gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT).rangeMin)
-      result.push('webgl vertex shader high float precision rangeMax:' + gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT).rangeMax)
-      result.push('webgl vertex shader medium float precision:' + gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT).precision)
-      result.push('webgl vertex shader medium float precision rangeMin:' + gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT).rangeMin)
-      result.push('webgl vertex shader medium float precision rangeMax:' + gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT).rangeMax)
-      result.push('webgl vertex shader low float precision:' + gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.LOW_FLOAT).precision)
-      result.push('webgl vertex shader low float precision rangeMin:' + gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.LOW_FLOAT).rangeMin)
-      result.push('webgl vertex shader low float precision rangeMax:' + gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.LOW_FLOAT).rangeMax)
-      result.push('webgl fragment shader high float precision:' + gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT).precision)
-      result.push('webgl fragment shader high float precision rangeMin:' + gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT).rangeMin)
-      result.push('webgl fragment shader high float precision rangeMax:' + gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT).rangeMax)
-      result.push('webgl fragment shader medium float precision:' + gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT).precision)
-      result.push('webgl fragment shader medium float precision rangeMin:' + gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT).rangeMin)
-      result.push('webgl fragment shader medium float precision rangeMax:' + gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT).rangeMax)
-      result.push('webgl fragment shader low float precision:' + gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.LOW_FLOAT).precision)
-      result.push('webgl fragment shader low float precision rangeMin:' + gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.LOW_FLOAT).rangeMin)
-      result.push('webgl fragment shader low float precision rangeMax:' + gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.LOW_FLOAT).rangeMax)
-      result.push('webgl vertex shader high int precision:' + gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_INT).precision)
-      result.push('webgl vertex shader high int precision rangeMin:' + gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_INT).rangeMin)
-      result.push('webgl vertex shader high int precision rangeMax:' + gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_INT).rangeMax)
-      result.push('webgl vertex shader medium int precision:' + gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_INT).precision)
-      result.push('webgl vertex shader medium int precision rangeMin:' + gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_INT).rangeMin)
-      result.push('webgl vertex shader medium int precision rangeMax:' + gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_INT).rangeMax)
-      result.push('webgl vertex shader low int precision:' + gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.LOW_INT).precision)
-      result.push('webgl vertex shader low int precision rangeMin:' + gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.LOW_INT).rangeMin)
-      result.push('webgl vertex shader low int precision rangeMax:' + gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.LOW_INT).rangeMax)
-      result.push('webgl fragment shader high int precision:' + gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_INT).precision)
-      result.push('webgl fragment shader high int precision rangeMin:' + gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_INT).rangeMin)
-      result.push('webgl fragment shader high int precision rangeMax:' + gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_INT).rangeMax)
-      result.push('webgl fragment shader medium int precision:' + gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_INT).precision)
-      result.push('webgl fragment shader medium int precision rangeMin:' + gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_INT).rangeMin)
-      result.push('webgl fragment shader medium int precision rangeMax:' + gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_INT).rangeMax)
-      result.push('webgl fragment shader low int precision:' + gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.LOW_INT).precision)
-      result.push('webgl fragment shader low int precision rangeMin:' + gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.LOW_INT).rangeMin)
-      result.push('webgl fragment shader low int precision rangeMax:' + gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.LOW_INT).rangeMax)
-      return result.join('~')
-    },
-    getWebglVendorAndRenderer: function () {
-      /* This a subset of the WebGL fingerprint with a lot of entropy, while being reasonably browser-independent */
-      try {
-        var glContext = this.getWebglCanvas()
-        var extensionDebugRendererInfo = glContext.getExtension('WEBGL_debug_renderer_info')
-        return glContext.getParameter(extensionDebugRendererInfo.UNMASKED_VENDOR_WEBGL) + '~' + glContext.getParameter(extensionDebugRendererInfo.UNMASKED_RENDERER_WEBGL)
-      } catch (e) {
-        return null
-      }
-    },
-    getAdBlock: function () {
-      var ads = document.createElement('div')
-      ads.innerHTML = '&nbsp;'
-      ads.className = 'adsbox'
-      var result = false
-      try {
-        // body may not exist, that's why we need try/catch
-        document.body.appendChild(ads)
-        result = document.getElementsByClassName('adsbox')[0].offsetHeight === 0
-        document.body.removeChild(ads)
-      } catch (e) {
-        result = false
-      }
-      return result
-    },
     getHasLiedLanguages: function () {
       // We check if navigator.language is equal to the first language of navigator.languages
       if (typeof navigator.languages !== 'undefined') {
@@ -1060,15 +816,6 @@
       var elem = document.createElement('canvas')
       return !!(elem.getContext && elem.getContext('2d'))
     },
-    isWebGlSupported: function () {
-      // code taken from Modernizr
-      if (!this.isCanvasSupported()) {
-        return false
-      }
-
-      var glContext = this.getWebglCanvas()
-      return !!window.WebGLRenderingContext && !!glContext
-    },
     isIE: function () {
       if (navigator.appName === 'Microsoft Internet Explorer') {
         return true
@@ -1076,37 +823,6 @@
         return true
       }
       return false
-    },
-    hasSwfObjectLoaded: function () {
-      return typeof window.swfobject !== 'undefined'
-    },
-    hasMinFlashInstalled: function () {
-      return window.swfobject.hasFlashPlayerVersion('9.0.0')
-    },
-    addFlashDivNode: function () {
-      var node = document.createElement('div')
-      node.setAttribute('id', this.options.swfContainerId)
-      document.body.appendChild(node)
-    },
-    loadSwfAndDetectFonts: function (done) {
-      var hiddenCallback = '___fp_swf_loaded'
-      window[hiddenCallback] = function (fonts) {
-        done(fonts)
-      }
-      var id = this.options.swfContainerId
-      this.addFlashDivNode()
-      var flashvars = { onReady: hiddenCallback }
-      var flashparams = { allowScriptAccess: 'always', menu: 'false' }
-      window.swfobject.embedSWF(this.options.swfPath, id, '1', '1', '9.0.0', false, flashvars, flashparams, {})
-    },
-    getWebglCanvas: function () {
-      var canvas = document.createElement('canvas')
-      var gl = null
-      try {
-        gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
-      } catch (e) { /* squelch */ }
-      if (!gl) { gl = null }
-      return gl
     },
 
     /**
