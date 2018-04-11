@@ -15,15 +15,18 @@ module.exports = {
         modules: ["node_modules"]
     },
     plugins: [
-        new BundleAnalyzerPlugin()
+        // new BundleAnalyzerPlugin()
     ],
     optimization: {
     	minimizer: [
     		// we specify a custom UglifyJsPlugin here to get source maps in production
     		new UglifyJsPlugin({
     			uglifyOptions: {
-    				mangle: {
-                        reserved: ['Fingerprint2']
+                    compress: {
+                        global_defs: {}
+                    },
+                    output: {
+                        ascii_only: true
                     }
     			},
     		})

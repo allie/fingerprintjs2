@@ -21,6 +21,10 @@
   "homepage": "https://github.com/Valve/fingerprintjs2",
   "main": "dist/fingerprint2.min.js",
   "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-rename": "^1.2.2",
+    "gulp-standard": "^10.1.2",
+    "gulp-uglify": "^3.0.0",
     "standard": "^10.0.3",
     "uglifyjs-webpack-plugin": "^1.2.4",
     "webpack": "^4.5.0"
