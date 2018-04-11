@@ -1,6 +1,7 @@
 var path = require("path");
 var webpack = require("webpack");
 var BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+var UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 
 module.exports = {
     entry: {
@@ -15,5 +16,17 @@ module.exports = {
     },
     plugins: [
         new BundleAnalyzerPlugin()
-    ]
+    ],
+    optimization: {
+    	minimizer: [
+    		// we specify a custom UglifyJsPlugin here to get source maps in production
+    		new UglifyJsPlugin({
+    			uglifyOptions: {
+    				mangle: {
+                        reserved: ['Fingerprint2']
+                    }
+    			},
+    		})
+    	]
+    }
 };

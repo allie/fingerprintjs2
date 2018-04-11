@@ -22,6 +22,7 @@
   "main": "dist/fingerprint2.min.js",
   "devDependencies": {
     "standard": "^10.0.3",
+    "uglifyjs-webpack-plugin": "^1.2.4",
     "webpack": "^4.5.0"
   },
   "scripts": {
